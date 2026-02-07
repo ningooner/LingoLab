@@ -97,7 +97,7 @@ The project includes pre-configured Supabase client utilities:
 
 ## Contributing
 
-This is an open-source project. Contributions are welcome!
+This is an open-source project. Contributions are welcome starting December of 2026!
 
 ## License
 
