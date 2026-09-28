@@ -20,6 +20,12 @@ grep -rL "Bruno Zingg" --include=*.py classquiz                                 
 | Component | Licence | Use |
 |---|---|---|
 | React, Vite, TanStack Router/Query, Zustand, zod, react-hook-form | MIT | Frontend |
+| @hookform/resolvers | MIT | zod ↔ react-hook-form bridge (replaces legacy yup), added in PR #2 |
+| @simplewebauthn/browser | MIT | WebAuthn registration ceremony on `/account/settings/security`; the library legacy uses, so the payload matches the backend (PR #9) |
+| qrcode.react | ISC | TOTP QR code, rendered locally so the secret never leaves the browser (PR #9) |
+| fuse.js | Apache-2.0 | Fuzzy search on `/dashboard`; the library legacy uses, with the same options (PR #11) |
+| thumbhash | MIT | Blurred placeholders for stored images (`components/MediaComponent.tsx`), as in legacy (PR #11) |
+| sonner | MIT | Toasts, replacing legacy `alert()` (ADR-0011) |
 | shadcn/ui (components and agent skill) | MIT | UI components |
 | Tailwind CSS | MIT | Styling |
 | lucide-react | ISC | Icons |
