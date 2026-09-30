@@ -289,7 +289,58 @@
     "enable_reorder": "Enable reorder mode",
     "disable_reorder": "Disable reorder mode",
     "advanced_settings": "Advanced Settings",
-    "hide_question_results": "Hide question resuluts?"
+    "hide_question_results": "Hide question results?",
+    "answer_color": "Colour",
+    "reset_color": "Reset colour",
+    "remove_image": "Remove image",
+    "cover_image": "Cover image",
+    "custom_bg_color": "Use your own background colour",
+    "bg_color": "Background colour",
+    "type_not_editable_yet": "This question type can't be edited here yet. Its answers stay as they are.",
+    "needs_attention": "Needs attention",
+    "quiz_not_found": "Quiz not found",
+    "quiz_not_found_text": "This quiz doesn't exist, or it belongs to another account.",
+    "load_failed": "The editor couldn't be opened. Check your connection and try again.",
+    "save_failed": "The quiz couldn't be saved. Your changes are still here; try again.",
+    "leave": {
+      "title": "Leave without saving?",
+      "body_create": "Your draft stays on this device and opens again the next time you create a quiz.",
+      "body_edit": "Your changes to this quiz will be lost.",
+      "stay": "Keep editing",
+      "leave": "Leave"
+    },
+    "delete_question_confirm": {
+      "title": "Delete question {{number}}?",
+      "body": "The question and its answers are removed from the quiz."
+    },
+    "reorder": {
+      "handle": "Move question {{number}}",
+      "role_description": "sortable question",
+      "instructions": "Press Space to pick up the question, the arrow keys to move it, Space again to drop it, or Escape to cancel.",
+      "picked_up": "Picked up question {{number}}.",
+      "moved": "Moved to position {{number}}.",
+      "dropped": "Dropped at position {{number}}.",
+      "cancelled": "Moving cancelled."
+    },
+    "errors": {
+      "title_required": "A title is required",
+      "title_too_short": "The title has to be at least 3 characters long",
+      "title_too_long": "The title has to be shorter than 300 characters",
+      "description_required": "A description is required",
+      "description_too_short": "The description has to be at least 3 characters long",
+      "description_too_long": "The description has to be shorter than 500 characters",
+      "question_required": "The question needs a text",
+      "question_too_long": "The question has to be shorter than 300 characters",
+      "time_positive": "The time has to be a positive number",
+      "answer_required": "Every answer needs a text",
+      "min_answers": "You need at least 2 answers",
+      "min_answers_text": "You need at least 1 answer",
+      "max_answers": "You can't have more than 16 answers",
+      "range_invalid": "The range needs numbers",
+      "slide_empty": "The slide mustn't be empty",
+      "min_questions": "You need at least one question",
+      "max_questions": "You can't have more than 50 questions"
+    }
   },
   "import_page": {
     "need_help": "Need help?",

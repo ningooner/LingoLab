@@ -50,17 +50,40 @@ Work top to bottom. Each phase should be usable end to end before starting the n
 - [x] `/dashboard` (438 + ~450 in components). **Split into two PRs:**
   - [x] quiz list: search, cards with cover image, analytics, download, delete (`lib/components/DownloadQuiz.svelte`, `lib/editor/MediaComponent.svelte` → shared `components/MediaComponent.tsx`)
   - [x] start-game dialog (`lib/dashboard/start_game.svelte`). Decided: no player captcha (always sends `captcha_enabled=False`), no ClassQuizControllers toggle, `lib/hashcash.ts` deleted
-- [ ] `/create` (138)
-- [ ] `/edit` (176): quiz editor, `lib/editor/*`. **Largest piece. Split into several PRs:**
-  - [ ] editor shell + sidebar + slide list (drag and drop)
-  - [ ] question types: ABCD, CHECK, TEXT, ORDER, RANGE, VOTING, SLIDE
-  - [ ] media/image upload (`uploader`, `MediaComponent`)
-  - [ ] rich text (CKEditor → Tiptap)
-- [ ] `/view/[quiz_id]` (343)
-- [ ] `/play` (220): student join + answer screens, `lib/play/*`
-- [ ] `/admin` (340): host/game-master screen, `lib/play/admin/*`
-- [ ] `/results` (85) and `/results/[result_id]`
-- [ ] `/edit/files` (185) and `/dashboard/files` (49)
+- [ ] `/create` (138) and `/edit` (176): quiz editor, `lib/editor.svelte` + `lib/editor/*` (~3,100). Both routes wrap the
+  same editor, so they land together with the first PR. **Largest piece. Split into five PRs:**
+  - [x] **PR 1** editor shell + ABCD: both routes and guards, `editor/start` + `editor/finish`, validation schema
+    (`yupSchemas.ts` → zod), localStorage draft, leave warning, settings card, sidebar with reorder (`@dnd-kit`),
+    add-question popup, ABCD questions. Title and question text are plain inputs and image fields are inert (existing
+    images are shown and can be removed) until PRs 3 and 4. Questions of other types are kept untouched through a save;
+    to make a type editable, add it to `EDITABLE_TYPES` and give `QuestionCard` its answer part.
+  - [ ] **PR 2** remaining question types: CHECK, TEXT, ORDER, RANGE, VOTING
+  - [ ] **PR 3** media upload (`uploader`, `uploader/Library`): cover, background and question images
+  - [ ] **PR 4** rich text (CKEditor → Tiptap) for the quiz title and the question text (legacy's description is a
+    plain textarea)
+  - [ ] **PR 5** SLIDE type (`slide.svelte`, `slides/*`, ~650): canvas editor + read-only renderer (`play/admin/slide.svelte`)
+- [ ] `/admin` (340) and `/play` (220): live game, `lib/play/*` (~2,000) + `lib/admin.svelte`. **Split into four PRs:**
+  - [ ] **PR 6** host lobby: `/admin` connect, PIN, QR code, player list, kick, start (`admin/game_not_started`)
+  - [ ] **PR 7** player join: `/play` PIN check, username, custom field, rejoin, kicked, title screen (`join`, `title`)
+  - [ ] **PR 8** host question loop: controls, timer, question/results/voting screens, Enter/Space shortcuts, final
+    results, export, save results
+  - [ ] **PR 9** player question loop: answer screens for all types, solutions, per-question results, end screen
+- [ ] **PR 10** `/results` (85) and `/results/[result_id]` (~480 with its child components)
+- [ ] **PR 11** `/view/[quiz_id]` (343 + `lib/view_quiz/*`): rating; reuses the start-game and download dialogs and the SLIDE renderer
+- [ ] **PR 12** `/edit/files` (185) and `/dashboard/files` (49): needs the uploader from PR 3
+
+Order: 1 → 12. PR 6 does not depend on the editor and can be pulled forward. The create → host → play loop is complete after PR 9.
+
+### Phase 2 decisions (Bruno, 2026-09-30)
+
+- **Uploader: custom dropzone** posting to `/api/v1/storage/`, not `@uppy/react`. Legacy's in-browser crop
+  (`@uppy/image-editor`) and compression (`@uppy/compressor`) are not carried over.
+- **Pixabay image search: dropped.** The search is proxied by the backend, but the result thumbnails load directly from
+  Pixabay's servers in the browser (privacy rules).
+- **SLIDE type: ported**, with `pikaso` (MIT; depends on `konva` and `deepmerge`, both MIT).
+- **Video tab in the uploader: left out for now.** It opens `/edit/videos`, a Phase 4 cut candidate; revisit with that decision.
+- **Captcha games in `/play`:** no hCaptcha/reCAPTCHA script is ever loaded. A game whose `check_captcha` answers
+  `enabled: true` (started through the API directly) shows a "this game can't be joined here" message.
 
 ## Phase 3: Discovery and import
 
@@ -101,6 +124,10 @@ Anything only a person with a real backend/device can confirm goes here, for one
   `ROOT_ADDRESS` (`http://localhost:5173`, which is the api container itself there). Quizzes without images and the
   Excel export were verified. Also check the cover thumbhash placeholder on a slow connection; locally the image
   arrived before the placeholder could be seen.
+
+- [ ] `/create` and `/edit` (Phase 2 PR 1): reorder questions by **dragging with a mouse and with a finger** (only the
+  keyboard path is covered by e2e). Leave an edit session open for more than an hour and save (the expired-session
+  retry is only unit-tested). Close the tab on a half-finished new quiz and check the draft comes back on `/create`.
 
 ## After parity (not now)
 
@@ -201,3 +228,21 @@ Behaviour in the old app that looks unintended. Log it here instead of silently 
 | `dashboard/start_game.svelte` | Hardcoded English: "Captcha enabled/disabled", "Randomize answers", the controller text, and the custom-field placeholder "Phone Number or Email". | New `start_game.*` keys (en + de). The placeholder is now "e.g. Class": the old example invited teachers to collect contact details from minors. |
 | `dashboard/start_game.svelte` | Calls the global `plausible()` on every game start. | Dropped (privacy rules; the call also throws where the script is absent). |
 | `dashboard/start_game.svelte` | Esc/backdrop listeners are added on mount and never removed; the background is a patterned SVG. | Replaced by the shadcn Dialog; no background pattern (design rules). |
+| `lib/editor.svelte` | The draft is written to localStorage as `edit_game` (in `beforeunload`, for both routes), but `/create` reads `create_game`. Nothing reads `edit_game`, so **a draft was never restored**. | **Fixed** (intended behaviour): `/create` keeps its draft under `create_game`, on every change instead of only in `beforeunload`, and clears it after a successful save. `/edit` stores nothing. |
+| `lib/editor.svelte` | The leave warning fires for an untouched editor, and only for a tab close/reload; SvelteKit's client-side navigation (browser back) leaves silently. | Warns only when there are unsaved changes, for both a tab close and in-app navigation (AlertDialog). |
+| `lib/editor.svelte` | Failures are `alert('Error!')` (session start, leaving a blank page) and `alert('Error')` (save). Success is `window.location.href = '/dashboard'`. | Error state with retry; toast on a failed save with the editor left intact; toast + client-side navigation on success. |
+| `lib/editor.svelte` | An edit session lives one hour in Redis (`ex=3600`). Saving after that returns 401 and legacy shows `alert('Error')`; on `/edit` the work is lost. | **Fixed** without touching the backend: a 401 from `/editor/finish` reopens the session once and repeats the save. |
+| `classquiz/routers/editor.py` | `POST /editor/finish` has no auth dependency: it trusts the 8-hex-digit `edit_id` alone. | Backend, not changed. Worth a look after parity. |
+| `lib/editor.svelte` | The editor has no way out except the browser's back button (the navbar is hidden). The whole editor is a `<form>`, so Enter in any field saves and leaves. | A "Dashboard" link in the top bar. Save is a button; Enter in a field does nothing. |
+| `routes/create`, `routes/edit` | Both files carry a success dialog whose `responseData.open` is never set, so it can never open; `edit` passes a `submit_button_text` prop the editor does not have. `<title>` is "ClassQuiz - Create/Edit". | The dialogs' texts (`create_page.success.title`, `edit_page.success_update_title`) are used for the success toast. No title set (branding rule). |
+| `routes/edit` | A non-404 failure of `GET /quiz/get/{id}` resolves without data and renders an empty page. The 404 message "Quiz not found" is hardcoded English. | Error state with retry; `editor.quiz_not_found` (en + de). A quiz of another account (the GET falls back to public quizzes, `/editor/start` then answers 404) is reported as not found too. |
+| `lib/yupSchemas.ts` | Validation messages are hardcoded English. "You can't have more than 32 questions" guards `.max(50)`. | New `editor.errors.*` keys (en + de). The limit of 50 is kept; the message says 50. |
+| `lib/yupSchemas.ts` | The answer schema is chosen by sniffing the first answer (`v[0].right`), which throws on an empty list; the editor then shows a **blank** error and a disabled Save. | The question's `type` chooses the schema. An empty list reports "You need at least 2 answers". |
+| `lib/editor/card.svelte` | `correctTimeInput` tests `time > 3` (the value) where it means the length, then cuts to three characters. | Implemented as intended: at most three digits, matching the field's `max="999"`. |
+| `lib/editor/ABCDEditorPart.svelte` | Writes `quiz_color:<i>:<title>` to localStorage on every change of the first question; nothing reads it. | Dropped. |
+| `lib/editor/ABCDEditorPart.svelte` | Default answer colours are `#D6EDC9 #B07156 #7F7057 #4E6E58`; right/wrong is shown by red/green only; resetting a colour is right-click only. | Defaults are the design system's answer colours 1-4 (still stored per answer). Right/wrong is a pressed/unpressed toggle with an icon; reset is a button. |
+| `lib/editor/sidebar.svelte` | Reordering is a separate "reorder mode" with up/down `<div role="button">` overlays (a comment explains real buttons submitted the form). Deleting uses `confirm()` in hardcoded English. | Drag handle per question with `@dnd-kit` (pointer, touch and keyboard), as planned. AlertDialog with `editor.delete_question_confirm.*`. The keys `editor.enable_reorder`/`disable_reorder` are now unused. |
+| `lib/editor/sidebar.svelte` | The settings entry repeats the description textarea and the public toggle; non-ABCD entries carry hardcoded English blurbs ("Some smart information on a slide"). Titles are rendered with `{@html}`. | The entry is a summary (title, public/private); other types show their translated type name. Plain text, as on the dashboard. |
+| `lib/editor/settings-card.svelte` | Removing the cover image is right-click only; "Remove Background-Image" and both tooltips are hardcoded English; switching the custom colour on leaves `background_color` undefined until a colour is picked. | Buttons with `editor.remove_image`; new keys for the labels. Switching on stores white, switching off stores none. |
+| `lib/editor/AddNewQuestionPopup.svelte` | Links to `/docs/quiz/question-types`. The Escape listener is never removed. | Link left out until `/docs` is decided (Phase 4). shadcn Dialog. |
+| `locales/en.json` | `editor.hide_question_results` reads "Hide question resuluts?". | Typo fixed; key kept. |
