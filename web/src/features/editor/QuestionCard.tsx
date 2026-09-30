@@ -21,8 +21,19 @@ import { Label } from '@/components/ui/label';
 import { AbcdAnswers } from './AbcdAnswers';
 import { EDITABLE_TYPES } from './editorData';
 import type { EditorIssue } from './editorSchema';
+import { OrderAnswers } from './OrderAnswers';
 import { TYPE_NAME_KEYS } from './questionTypes';
-import type { AbcdAnswer, Question } from './types';
+import { RangeAnswerEditor } from './RangeAnswerEditor';
+import { TextAnswers } from './TextAnswers';
+import type {
+  AbcdAnswer,
+  OrderAnswer,
+  Question,
+  RangeAnswer,
+  TextAnswer,
+  VotingAnswer,
+} from './types';
+import { VotingAnswers } from './VotingAnswers';
 
 type Props = {
   question: Question;
@@ -33,6 +44,28 @@ type Props = {
   onChange: (patch: Partial<Question>) => void;
 };
 
+/** The answer editor of the question's type, as legacy `card.svelte` picks it. */
+function AnswerPart({ question, onChange }: Pick<Props, 'question' | 'onChange'>) {
+  const { answers } = question;
+  const setAnswers = (next: Question['answers']) => onChange({ answers: next });
+  // `normaliseQuiz` guarantees the shape that belongs to the type.
+  switch (question.type) {
+    case 'ABCD':
+    case 'CHECK':
+      return <AbcdAnswers answers={answers as AbcdAnswer[]} onChange={setAnswers} />;
+    case 'VOTING':
+      return <VotingAnswers answers={answers as VotingAnswer[]} onChange={setAnswers} />;
+    case 'ORDER':
+      return <OrderAnswers answers={answers as OrderAnswer[]} onChange={setAnswers} />;
+    case 'TEXT':
+      return <TextAnswers answers={answers as TextAnswer[]} onChange={setAnswers} />;
+    case 'RANGE':
+      return <RangeAnswerEditor answer={answers as RangeAnswer} onChange={setAnswers} />;
+    case 'SLIDE':
+      return null;
+  }
+}
+
 /** Port of legacy `lib/editor/card.svelte`: one question's fields. */
 export function QuestionCard({ question, number, issues, onChange }: Props) {
   const { t } = useTranslation();
@@ -41,7 +74,8 @@ export function QuestionCard({ question, number, issues, onChange }: Props) {
 
   const textIssue = issues.find((issue) => issue.path[0] === 'question');
   const timeIssue = issues.find((issue) => issue.path[0] === 'time');
-  // A problem with the answer list itself (too few); a single empty answer is marked on its field.
+  // A problem with the answers as a whole (too few, an empty range); a single empty answer
+  // is marked on its field.
   const answersIssue = issues.find(
     (issue) => issue.path[0] === 'answers' && issue.path.length === 1,
   );
@@ -123,12 +157,9 @@ export function QuestionCard({ question, number, issues, onChange }: Props) {
 
       <div className="flex flex-col gap-3">
         <h3 className="font-display text-base font-semibold">{t('words.answer_plural')}</h3>
-        {editable && Array.isArray(question.answers) ? (
+        {editable ? (
           <>
-            <AbcdAnswers
-              answers={question.answers as AbcdAnswer[]}
-              onChange={(answers) => onChange({ answers })}
-            />
+            <AnswerPart question={question} onChange={onChange} />
             {answersIssue ? (
               <p className="text-sm text-destructive">{t(answersIssue.message)}</p>
             ) : null}

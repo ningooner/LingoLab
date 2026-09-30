@@ -4,9 +4,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   clearDraft,
   DEFAULT_ANSWER_COLORS,
+  DEFAULT_RANGE_ANSWER,
   DRAFT_STORAGE_KEY,
+  EDITABLE_TYPES,
   emptyQuestion,
   emptyQuiz,
+  fitRange,
   loadDraft,
   moveItem,
   normaliseQuiz,
@@ -67,7 +70,7 @@ describe('normaliseQuiz', () => {
     ]);
   });
 
-  it('leaves the answers of other question types untouched', () => {
+  it('leaves a complete RANGE answer and a SLIDE canvas untouched', () => {
     const range = { min: 0, max: 10, min_correct: 3, max_correct: 7 };
     const quiz = normaliseQuiz({
       title: 't',
@@ -77,6 +80,74 @@ describe('normaliseQuiz', () => {
       ],
     });
     expect(quiz?.questions.map((q) => q.answers)).toEqual([range, '{"a":1}']);
+  });
+
+  it('gives a RANGE question without its numbers the default range', () => {
+    const quiz = normaliseQuiz({
+      title: 't',
+      questions: [{ type: 'RANGE', question: 'q', time: '20', answers: [] }],
+    });
+    expect(quiz?.questions[0]?.answers).toEqual(DEFAULT_RANGE_ANSWER);
+  });
+
+  it('keeps the stored case sensitivity of TEXT answers (legacy reset it to false)', () => {
+    const quiz = normaliseQuiz({
+      title: 't',
+      questions: [
+        {
+          type: 'TEXT',
+          question: 'q',
+          time: '20',
+          answers: [{ answer: 'London', case_sensitive: true }, { answer: 'london' }],
+        },
+      ],
+    });
+    expect(quiz?.questions[0]?.answers).toEqual([
+      { answer: 'London', case_sensitive: true },
+      { answer: 'london', case_sensitive: false },
+    ]);
+  });
+
+  it('fills in colours for VOTING and ORDER answers and drops the ORDER id', () => {
+    const quiz = normaliseQuiz({
+      title: 't',
+      questions: [
+        {
+          type: 'VOTING',
+          question: 'q',
+          time: '20',
+          answers: [
+            { answer: 'a', image: 'img' },
+            { answer: 'b', color: '#123456' },
+          ],
+        },
+        {
+          type: 'ORDER',
+          question: 'q',
+          time: '20',
+          answers: [
+            { answer: 'first', id: [0] },
+            { answer: 'second', color: '#123456', id: 1 },
+          ],
+        },
+      ],
+    });
+    expect(quiz?.questions[0]?.answers).toEqual([
+      { answer: 'a', image: 'img', color: DEFAULT_ANSWER_COLORS[0] },
+      { answer: 'b', color: '#123456' },
+    ]);
+    expect(quiz?.questions[1]?.answers).toEqual([
+      { answer: 'first', color: DEFAULT_ANSWER_COLORS[0] },
+      { answer: 'second', color: '#123456' },
+    ]);
+  });
+
+  it('turns a missing answer list into an empty one', () => {
+    const quiz = normaliseQuiz({
+      title: 't',
+      questions: [{ type: 'CHECK', question: 'q', time: '20' }],
+    });
+    expect(quiz?.questions[0]?.answers).toEqual([]);
   });
 
   it('turns a null description into an empty one', () => {
@@ -146,5 +217,48 @@ describe('draft', () => {
     expect(loadDraft()).toBeNull();
     localStorage.setItem(DRAFT_STORAGE_KEY, '"text"');
     expect(loadDraft()).toBeNull();
+  });
+});
+
+describe('fitRange', () => {
+  it('pulls the correct span inside the selectable span', () => {
+    expect(fitRange({ min: 5, max: 6, min_correct: 3, max_correct: 7 })).toEqual({
+      min: 5,
+      max: 6,
+      min_correct: 5,
+      max_correct: 6,
+    });
+  });
+
+  it('rounds to whole numbers, which the backend requires', () => {
+    expect(fitRange({ min: 0.4, max: 9.6, min_correct: 2.5, max_correct: 7.2 })).toEqual({
+      min: 0,
+      max: 10,
+      min_correct: 3,
+      max_correct: 7,
+    });
+  });
+
+  it('leaves the correct span alone while the bounds are not a span', () => {
+    expect(fitRange({ min: 10, max: 0, min_correct: 3, max_correct: 7 })).toEqual({
+      min: 10,
+      max: 0,
+      min_correct: 3,
+      max_correct: 7,
+    });
+  });
+});
+
+describe('new questions', () => {
+  it('can be added for every type but SLIDE', () => {
+    expect([...EDITABLE_TYPES].sort()).toEqual(
+      ['ABCD', 'CHECK', 'ORDER', 'RANGE', 'TEXT', 'VOTING'].sort(),
+    );
+  });
+
+  it('start a RANGE question with its own copy of the default range', () => {
+    const answers = emptyQuestion('RANGE').answers;
+    expect(answers).toEqual(DEFAULT_RANGE_ANSWER);
+    expect(answers).not.toBe(DEFAULT_RANGE_ANSWER);
   });
 });

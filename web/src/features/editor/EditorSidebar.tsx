@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { type EditorIssue, hasIssueAt } from './editorSchema';
 import { TYPE_NAME_KEYS } from './questionTypes';
-import type { AbcdAnswer, EditorQuestion, EditorState } from './types';
+import type { EditorQuestion, EditorState, RangeAnswer } from './types';
 
 type Props = {
   state: EditorState;
@@ -61,7 +61,10 @@ function InvalidMark() {
   );
 }
 
-function AnswerChips({ answers }: { answers: AbcdAnswer[] }) {
+/** ABCD and CHECK answers are marked right or wrong; VOTING and TEXT answers carry no mark. */
+type ChipAnswer = { answer: string; right?: boolean };
+
+function AnswerChips({ answers }: { answers: ChipAnswer[] }) {
   const { t } = useTranslation();
   return (
     <span className="grid grid-cols-2 gap-1">
@@ -72,7 +75,7 @@ function AnswerChips({ answers }: { answers: AbcdAnswer[] }) {
           className="flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs"
         >
           {/* Right and wrong differ by icon, not by colour alone. */}
-          {answer.right ? (
+          {typeof answer.right !== 'boolean' ? null : answer.right ? (
             <Check className="size-3 shrink-0 text-primary" aria-hidden="true" />
           ) : (
             <X className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -115,7 +118,9 @@ function SortableQuestion({
     attributes: { roleDescription: t('editor.reorder.role_description') },
   });
   const number = index + 1;
-  const hasChips = question.type === 'ABCD' || question.type === 'CHECK';
+  // Legacy lists the answers of these types; ORDER and SLIDE only had an English blurb.
+  const hasChips = ['ABCD', 'CHECK', 'VOTING', 'TEXT'].includes(question.type);
+  const range = question.type === 'RANGE' ? (question.answers as RangeAnswer) : null;
 
   return (
     <li
@@ -163,7 +168,16 @@ function SortableQuestion({
           {invalid ? <InvalidMark /> : null}
         </span>
         {hasChips && Array.isArray(question.answers) ? (
-          <AnswerChips answers={question.answers as AbcdAnswer[]} />
+          <AnswerChips answers={question.answers as ChipAnswer[]} />
+        ) : range ? (
+          <span className="text-xs text-muted-foreground">
+            {t('editor.range.summary', {
+              minCorrect: range.min_correct,
+              maxCorrect: range.max_correct,
+              min: range.min,
+              max: range.max,
+            })}
+          </span>
         ) : (
           <span className="text-xs text-muted-foreground">{t(TYPE_NAME_KEYS[question.type])}</span>
         )}

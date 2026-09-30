@@ -26,10 +26,17 @@ export const textAnswersSchema = z
   .max(16, 'editor.errors.max_answers');
 
 const rangeNumber = z.number('editor.errors.range_invalid').optional();
-export const rangeAnswerSchema = z.object(
-  { min: rangeNumber, max: rangeNumber, min_correct: rangeNumber, max_correct: rangeNumber },
-  'editor.errors.range_invalid',
-);
+// Legacy only hinted at this with the inputs' `min`/`max` attributes, which a typed value
+// ignores; a span that is empty or reversed cannot be played.
+export const rangeAnswerSchema = z
+  .object(
+    { min: rangeNumber, max: rangeNumber, min_correct: rangeNumber, max_correct: rangeNumber },
+    'editor.errors.range_invalid',
+  )
+  .refine(
+    (range) => range.min === undefined || range.max === undefined || range.max > range.min,
+    'editor.errors.range_min_max',
+  );
 
 const slideSchema = z.string('editor.errors.slide_empty').min(1, 'editor.errors.slide_empty');
 

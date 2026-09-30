@@ -57,7 +57,9 @@ Work top to bottom. Each phase should be usable end to end before starting the n
     add-question popup, ABCD questions. Title and question text are plain inputs and image fields are inert (existing
     images are shown and can be removed) until PRs 3 and 4. Questions of other types are kept untouched through a save;
     to make a type editable, add it to `EDITABLE_TYPES` and give `QuestionCard` its answer part.
-  - [ ] **PR 2** remaining question types: CHECK, TEXT, ORDER, RANGE, VOTING
+  - [x] **PR 2** remaining question types: CHECK, TEXT, ORDER, RANGE, VOTING. One answer part per legacy
+    `*EditorPart.svelte`; CHECK shares the ABCD part, as in legacy. RANGE uses the shadcn Slider
+    (`svelte-range-slider-pips` → Slider). Only SLIDE still shows the "not editable yet" note.
   - [ ] **PR 3** media upload (`uploader`, `uploader/Library`): cover, background and question images
   - [ ] **PR 4** rich text (CKEditor → Tiptap) for the quiz title and the question text (legacy's description is a
     plain textarea)
@@ -128,6 +130,9 @@ Anything only a person with a real backend/device can confirm goes here, for one
 - [ ] `/create` and `/edit` (Phase 2 PR 1): reorder questions by **dragging with a mouse and with a finger** (only the
   keyboard path is covered by e2e). Leave an edit session open for more than an hour and save (the expired-session
   retry is only unit-tested). Close the tab on a half-finished new quiz and check the draft comes back on `/create`.
+- [ ] `/create` and `/edit` (Phase 2 PR 2): drag the two thumbs of a RANGE question's slider **with a mouse and with a
+  finger** (e2e only uses the keyboard). Play one question of each type in the legacy app after saving it here; the
+  backend round-trip was checked, the play screens were not.
 
 ## After parity (not now)
 
@@ -245,4 +250,9 @@ Behaviour in the old app that looks unintended. Log it here instead of silently 
 | `lib/editor/sidebar.svelte` | The settings entry repeats the description textarea and the public toggle; non-ABCD entries carry hardcoded English blurbs ("Some smart information on a slide"). Titles are rendered with `{@html}`. | The entry is a summary (title, public/private); other types show their translated type name. Plain text, as on the dashboard. |
 | `lib/editor/settings-card.svelte` | Removing the cover image is right-click only; "Remove Background-Image" and both tooltips are hardcoded English; switching the custom colour on leaves `background_color` undefined until a colour is picked. | Buttons with `editor.remove_image`; new keys for the labels. Switching on stores white, switching off stores none. |
 | `lib/editor/AddNewQuestionPopup.svelte` | Links to `/docs/quiz/question-types`. The Escape listener is never removed. | Link left out until `/docs` is decided (Phase 4). shadcn Dialog. |
+| `lib/editor/TextEditorPart.svelte` | On mount, every answer is rebuilt with `case_sensitive: false`, so **opening a TEXT question silently switches off a stored "case sensitive"**. The toggle's tooltip "Case sensitive?" is hardcoded English and the toggle shows a check/cross icon only. | **Fixed** (intended behaviour): the stored value is kept. A labelled pressed/unpressed button with `editor.case_sensitive` (en + de). |
+| `lib/editor/RangeSelectorEditorPart.svelte` | The bounds are only limited by the inputs' `min`/`max` attributes (`max ≥ min + 2`), which a typed value ignores; a quiz with `max ≤ min` can be saved and the slider then breaks. Nothing labels the two inputs. | New validation message `editor.errors.range_min_max` when the highest number is not above the lowest (the `+ 2` is not enforced). The correct span is pulled inside new bounds when a bound field is left. Values are rounded to whole numbers, as the backend model (`int`) requires. Labels `editor.range.*`. |
+| `lib/editor/OrderEditorPart.svelte` | Adds a client-side `id` to every answer for its list animation (`[i]`, an array, for stored answers and a number for new ones) and sends it along; the backend model drops it. Resetting a colour (right-click) stores `null`, which the next render replaces by the default. | No `id` is stored or sent. Reset is a button and stores the default colour directly. |
+| `lib/editor/VotingEditorPart.svelte`, `OrderEditorPart.svelte` | Default colours are the legacy brown/green set, as in the ABCD part; resetting a colour is right-click only. `VotingEditorPart` empties the answers when the first one has a boolean `right` (a leftover guard for switching types, which the editor cannot do). | The design system's answer colours 1-4, a reset button. The guard is not carried over. |
+| `lib/editor/sidebar.svelte` | The RANGE summary ("All numbers between … are correct, where …") is hardcoded English. | `editor.range.summary` (en + de), shown in the sidebar and under the slider (legacy's slider labelled its pips instead). |
 | `locales/en.json` | `editor.hide_question_results` reads "Hide question resuluts?". | Typo fixed; key kept. |
