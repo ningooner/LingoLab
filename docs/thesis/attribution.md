@@ -25,6 +25,7 @@ grep -rL "Bruno Zingg" --include=*.py classquiz                                 
 | qrcode.react | ISC | TOTP QR code, rendered locally so the secret never leaves the browser (PR #9) |
 | fuse.js | Apache-2.0 | Fuzzy search on `/dashboard`; the library legacy uses, with the same options (PR #11) |
 | thumbhash | MIT | Blurred placeholders for stored images (`components/MediaComponent.tsx`), as in legacy (PR #11) |
+| @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities | MIT | Drag-and-drop reorder of questions in the quiz editor sidebar (pointer, touch and keyboard), replacing legacy's "reorder mode" (PR #13) |
 | sonner | MIT | Toasts, replacing legacy `alert()` (ADR-0011) |
 | shadcn/ui (components and agent skill) | MIT | UI components |
 | Tailwind CSS | MIT | Styling |
