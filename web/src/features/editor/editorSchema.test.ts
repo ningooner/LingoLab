@@ -121,6 +121,20 @@ describe('validateQuiz', () => {
     ).toContain('editor.errors.min_answers_text');
   });
 
+  it('rejects a RANGE question whose highest number is not above its lowest', () => {
+    const range = (min: number, max: number): Question => ({
+      type: 'RANGE',
+      question: 'q',
+      time: '20',
+      answers: { min, max, min_correct: min, max_correct: max },
+    });
+    expect(messages(quiz({ questions: [range(5, 5)] }))).toEqual(['editor.errors.range_min_max']);
+    expect(messages(quiz({ questions: [range(10, 0)] }))).toEqual(['editor.errors.range_min_max']);
+    expect(validateQuiz(quiz({ questions: [range(-5, 5)] }))).toEqual([]);
+    expect(en.editor.errors).toHaveProperty('range_min_max');
+    expect(de.editor.errors).toHaveProperty('range_min_max');
+  });
+
   it('only uses messages that exist in both languages', () => {
     const invalid = quiz({
       title: '',

@@ -297,6 +297,16 @@
     "hide_question_results": "Frageergebnisse ausblenden?",
     "answer_color": "Farbe",
     "reset_color": "Farbe zurücksetzen",
+    "case_sensitive": "Groß-/Kleinschreibung beachten",
+    "move_up": "Nach oben",
+    "move_down": "Nach unten",
+    "range": {
+      "min": "Kleinste Zahl",
+      "max": "Größte Zahl",
+      "correct_from": "Kleinste richtige Zahl",
+      "correct_to": "Größte richtige Zahl",
+      "summary": "Alle Zahlen von {{minCorrect}} bis {{maxCorrect}} sind richtig. Wählbar sind Zahlen von {{min}} bis {{max}}."
+    },
     "remove_image": "Bild entfernen",
     "cover_image": "Titelbild",
     "custom_bg_color": "Eigene Hintergrundfarbe verwenden",
@@ -342,6 +352,7 @@
       "min_answers_text": "Du brauchst mindestens 1 Antwort",
       "max_answers": "Du kannst nicht mehr als 16 Antworten haben",
       "range_invalid": "Der Zahlenbereich braucht Zahlen",
+      "range_min_max": "Die größte Zahl muss größer sein als die kleinste",
       "slide_empty": "Die Folie darf nicht leer sein",
       "min_questions": "Du brauchst mindestens eine Frage",
       "max_questions": "Du kannst nicht mehr als 50 Fragen haben"

@@ -11,6 +11,7 @@ import {
   QUESTION_TYPES,
   type Question,
   type QuizQuestionType,
+  type RangeAnswer,
 } from './types';
 
 /**
@@ -20,14 +21,32 @@ import {
  */
 export const DEFAULT_ANSWER_COLORS = ['#E69F00', '#56B4E9', '#009E73', '#CC79A7'] as const;
 
-/** The editor offers at most four answers, although the schema would accept 16. */
-export const MAX_ABCD_ANSWERS = 4;
+/** The editor offers at most four answers for every list type, although the schema would accept 16. */
+export const MAX_ANSWERS = 4;
+
+/** A new RANGE question, as in legacy `AddNewQuestionPopup.svelte`. */
+export const DEFAULT_RANGE_ANSWER: RangeAnswer = {
+  min: 0,
+  max: 10,
+  min_correct: 3,
+  max_correct: 7,
+};
 
 /** Picked when the custom background colour is switched on. */
 export const DEFAULT_BACKGROUND_COLOR = '#ffffff';
 
-/** Question types this editor can add and edit so far. Grows with PRs 2 and 5. */
-export const EDITABLE_TYPES: readonly QuizQuestionType[] = ['ABCD'];
+/**
+ * Question types this editor can add and edit so far, in the order of legacy's
+ * add-question popup. SLIDE follows with PR 5.
+ */
+export const EDITABLE_TYPES: readonly QuizQuestionType[] = [
+  'ABCD',
+  'VOTING',
+  'CHECK',
+  'ORDER',
+  'TEXT',
+  'RANGE',
+];
 
 let keyCounter = 0;
 function nextKey(): string {
@@ -43,6 +62,20 @@ export function emptyAnswer(index: number): AbcdAnswer {
   return { answer: '', color: defaultAnswerColor(index), right: false };
 }
 
+/**
+ * Keeps a RANGE question's correct span inside its selectable span, as legacy's slider did,
+ * and its numbers whole: the backend model declares them as `int`.
+ */
+export function fitRange(answer: RangeAnswer): RangeAnswer {
+  const min = Math.round(answer.min);
+  const max = Math.round(answer.max);
+  if (max <= min) return { ...answer, min, max };
+  const clamp = (value: number) => Math.min(max, Math.max(min, Math.round(value)));
+  const low = clamp(answer.min_correct);
+  const high = clamp(answer.max_correct);
+  return { min, max, min_correct: Math.min(low, high), max_correct: Math.max(low, high) };
+}
+
 export function emptyQuiz(title = ''): EditorData {
   return { title, description: '', public: false, questions: [] };
 }
@@ -53,12 +86,7 @@ export function emptyQuestion(type: QuizQuestionType): Question {
     time: '20',
     question: '',
     image: null,
-    answers:
-      type === 'RANGE'
-        ? { min: 0, max: 10, min_correct: 3, max_correct: 7 }
-        : type === 'SLIDE'
-          ? ''
-          : [],
+    answers: type === 'RANGE' ? { ...DEFAULT_RANGE_ANSWER } : type === 'SLIDE' ? '' : [],
   };
 }
 
@@ -99,23 +127,63 @@ function isQuestionType(value: unknown): value is QuizQuestionType {
   return (QUESTION_TYPES as readonly unknown[]).includes(value);
 }
 
+function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+/**
+ * What each legacy editor part did to a question's answers when it was opened: a list type
+ * gets a list, missing colours are filled in by position, and a RANGE question without its
+ * numbers gets the defaults. A SLIDE's canvas string is passed through.
+ */
+function normaliseAnswers(type: QuizQuestionType, raw: unknown): Question['answers'] {
+  if (type === 'SLIDE') return (raw ?? '') as Question['answers'];
+  if (type === 'RANGE') {
+    if (
+      isRecord(raw) &&
+      isNumber(raw.min) &&
+      isNumber(raw.max) &&
+      isNumber(raw.min_correct) &&
+      isNumber(raw.max_correct)
+    ) {
+      return raw as RangeAnswer;
+    }
+    return { ...DEFAULT_RANGE_ANSWER };
+  }
+  const list = (Array.isArray(raw) ? raw : []).map((item) => (isRecord(item) ? item : {}));
+  const text = (item: Raw) => (typeof item.answer === 'string' ? item.answer : '');
+  switch (type) {
+    case 'TEXT':
+      // Legacy reset `case_sensitive` to false whenever the question was opened; the stored
+      // value is kept here.
+      return list.map((item) => ({
+        answer: text(item),
+        case_sensitive: item.case_sensitive === true,
+      }));
+    case 'ORDER':
+      // Legacy adds a client-side `id` for its list animation; the backend drops it.
+      return list.map((item, index) => ({
+        answer: text(item),
+        color: optionalString(item.color) ?? defaultAnswerColor(index),
+      }));
+    default:
+      // ABCD, CHECK and VOTING keep their other fields (`right`, `image`).
+      return list.map((item, index) =>
+        item.color ? item : { ...item, color: defaultAnswerColor(index) },
+      ) as Question['answers'];
+  }
+}
+
 function normaliseQuestion(raw: unknown): Question {
   const source = isRecord(raw) ? raw : {};
   // Legacy `/edit`: a question stored without a type is an ABCD question.
   const type = isQuestionType(source.type) ? source.type : 'ABCD';
-  let answers = (source.answers ?? []) as Question['answers'];
-  if ((type === 'ABCD' || type === 'CHECK') && Array.isArray(answers)) {
-    // Legacy `set_colors_if_unset`, which ran when a question was opened.
-    answers = (answers as AbcdAnswer[]).map((answer, index) =>
-      answer.color ? answer : { ...answer, color: defaultAnswerColor(index) },
-    );
-  }
   return {
     type,
     question: typeof source.question === 'string' ? source.question : '',
     time: source.time === null || source.time === undefined ? '' : String(source.time),
     image: optionalString(source.image),
-    answers,
+    answers: normaliseAnswers(type, source.answers),
     hide_results: source.hide_results === true,
   };
 }

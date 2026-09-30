@@ -292,6 +292,16 @@
     "hide_question_results": "Hide question results?",
     "answer_color": "Colour",
     "reset_color": "Reset colour",
+    "case_sensitive": "Case sensitive",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "range": {
+      "min": "Lowest number",
+      "max": "Highest number",
+      "correct_from": "Lowest correct number",
+      "correct_to": "Highest correct number",
+      "summary": "All numbers from {{minCorrect}} to {{maxCorrect}} are correct. Players can choose from {{min}} to {{max}}."
+    },
     "remove_image": "Remove image",
     "cover_image": "Cover image",
     "custom_bg_color": "Use your own background colour",
@@ -337,6 +347,7 @@
       "min_answers_text": "You need at least 1 answer",
       "max_answers": "You can't have more than 16 answers",
       "range_invalid": "The range needs numbers",
+      "range_min_max": "The highest number has to be greater than the lowest",
       "slide_empty": "The slide mustn't be empty",
       "min_questions": "You need at least one question",
       "max_questions": "You can't have more than 50 questions"
