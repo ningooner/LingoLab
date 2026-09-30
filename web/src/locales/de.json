@@ -294,7 +294,58 @@
     "enable_reorder": "Fragen Umsortieren",
     "disable_reorder": "Umsortieren beenden",
     "advanced_settings": "Erweiterte Einstellungen",
-    "hide_question_results": "Frageergebnisse ausblenden?"
+    "hide_question_results": "Frageergebnisse ausblenden?",
+    "answer_color": "Farbe",
+    "reset_color": "Farbe zurücksetzen",
+    "remove_image": "Bild entfernen",
+    "cover_image": "Titelbild",
+    "custom_bg_color": "Eigene Hintergrundfarbe verwenden",
+    "bg_color": "Hintergrundfarbe",
+    "type_not_editable_yet": "Dieser Fragetyp kann hier noch nicht bearbeitet werden. Die Antworten bleiben unverändert.",
+    "needs_attention": "Unvollständig",
+    "quiz_not_found": "Quiz nicht gefunden",
+    "quiz_not_found_text": "Dieses Quiz existiert nicht oder gehört zu einem anderen Konto.",
+    "load_failed": "Der Editor konnte nicht geöffnet werden. Prüfe deine Verbindung und versuche es erneut.",
+    "save_failed": "Das Quiz konnte nicht gespeichert werden. Deine Änderungen sind noch da; versuche es erneut.",
+    "leave": {
+      "title": "Ohne Speichern verlassen?",
+      "body_create": "Dein Entwurf bleibt auf diesem Gerät und öffnet sich wieder, wenn du das nächste Mal ein Quiz erstellst.",
+      "body_edit": "Deine Änderungen an diesem Quiz gehen verloren.",
+      "stay": "Weiter bearbeiten",
+      "leave": "Verlassen"
+    },
+    "delete_question_confirm": {
+      "title": "Frage {{number}} löschen?",
+      "body": "Die Frage und ihre Antworten werden aus dem Quiz entfernt."
+    },
+    "reorder": {
+      "handle": "Frage {{number}} verschieben",
+      "role_description": "verschiebbare Frage",
+      "instructions": "Drücke die Leertaste, um die Frage aufzunehmen, die Pfeiltasten, um sie zu verschieben, erneut die Leertaste, um sie abzulegen, oder Escape zum Abbrechen.",
+      "picked_up": "Frage {{number}} aufgenommen.",
+      "moved": "Auf Position {{number}} verschoben.",
+      "dropped": "Auf Position {{number}} abgelegt.",
+      "cancelled": "Verschieben abgebrochen."
+    },
+    "errors": {
+      "title_required": "Ein Titel ist erforderlich",
+      "title_too_short": "Der Titel muss mindestens 3 Zeichen lang sein",
+      "title_too_long": "Der Titel muss kürzer als 300 Zeichen sein",
+      "description_required": "Eine Beschreibung ist erforderlich",
+      "description_too_short": "Die Beschreibung muss mindestens 3 Zeichen lang sein",
+      "description_too_long": "Die Beschreibung muss kürzer als 500 Zeichen sein",
+      "question_required": "Die Frage braucht einen Text",
+      "question_too_long": "Die Frage muss kürzer als 300 Zeichen sein",
+      "time_positive": "Die Zeit muss eine positive Zahl sein",
+      "answer_required": "Jede Antwort braucht einen Text",
+      "min_answers": "Du brauchst mindestens 2 Antworten",
+      "min_answers_text": "Du brauchst mindestens 1 Antwort",
+      "max_answers": "Du kannst nicht mehr als 16 Antworten haben",
+      "range_invalid": "Der Zahlenbereich braucht Zahlen",
+      "slide_empty": "Die Folie darf nicht leer sein",
+      "min_questions": "Du brauchst mindestens eine Frage",
+      "max_questions": "Du kannst nicht mehr als 50 Fragen haben"
+    }
   },
   "import": {
     "need_help": "",

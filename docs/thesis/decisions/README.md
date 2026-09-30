@@ -17,3 +17,4 @@
 | [0013](0013-settings-route-un-nesting.md) | Un-nest the settings child routes (`settings_/`) | Accepted | 2026-09-17 |
 | [0014](0014-avatar-svg-content-type-workaround.md) | Work around the avatar `Content-Type` bug client-side | Accepted | 2026-09-17 |
 | [0015](0015-when-to-fix-a-legacy-bug.md) | When to fix a legacy bug and when to replicate it | Accepted | 2026-09-17 |
+| [0016](0016-phase-2-breakdown-and-media-scope.md) | Phase 2 breakdown into twelve PRs, and the media and scope choices it required | Accepted | 2026-09-30 |
